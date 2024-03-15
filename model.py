@@ -127,11 +127,11 @@ def model_blueprint(mysql):
             return jsonify({"error": "Failed to fetch models by user ID", "details": str(e)}), 500
         finally:
             cur.close()
-
+    
     # Route for fetching models by tags
-    @model_blueprint.route('/models/tags', methods=['GET'])
+    @model_blueprint.route('/model_by_tags', methods=['GET'])
     def get_models_by_tags():
-        tags = request.json.getlist('tags')  # Assuming tags are provided as JSON
+        tags = request.json.get('tags')  # Assuming tags are provided as JSON
         if not tags:
             return jsonify({"error": "At least one tag must be provided"}), 400
 
