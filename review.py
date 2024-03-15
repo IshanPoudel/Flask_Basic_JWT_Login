@@ -73,4 +73,36 @@ def review_blueprint(mysql):
         finally:
             cur.close()
 
+    @review_blueprint.route('/toggle_upvote/<int:review_id>', methods=['POST'])
+    @jwt_required()
+    def toggle_upvote(review_id):
+        current_user_id = get_jwt_identity()
+        cur = mysql.connection.cursor()
+        try:
+            # Check if the user has already upvoted the review
+            cur.execute("SELECT COUNT(*) FROM Review_Upvotes WHERE Review_ID = %s AND User_ID = %s",
+                        (review_id, current_user_id))
+            upvote_count = cur.fetchone()['COUNT(*)']
+            print(upvote_count)
+
+            if upvote_count > 0:
+                # User has already upvoted, remove the upvote
+                cur.execute("DELETE FROM Review_Upvotes WHERE Review_ID = %s AND User_ID = %s",
+                            (review_id, current_user_id))
+                mysql.connection.commit()
+                return jsonify({"message": "Upvote removed successfully"}), 200
+            else:
+                # User hasn't upvoted yet, add the upvote
+                cur.execute("INSERT INTO Review_Upvotes (Review_ID, User_ID) VALUES (%s, %s)",
+                            (review_id, current_user_id))
+                mysql.connection.commit()
+                return jsonify({"message": "Upvoted successfully"}), 200
+        except Exception as e:
+            mysql.connection.rollback()
+            return jsonify({"error": "Failed to toggle upvote", "details": str(e)}), 500
+        finally:
+            cur.close()
+
+    
+    
     return review_blueprint
