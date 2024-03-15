@@ -1,7 +1,10 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify , request
 from flask_jwt_extended import JWTManager
 from flask_mysqldb import MySQL
+
+#All our route classes
 from auth import auth_blueprint
+from general_routes import general_blueprint
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -24,18 +27,25 @@ mysql = MySQL(app)
 # Register the authentication blueprint and pass the MySQL instance
 app.register_blueprint(auth_blueprint(mysql), url_prefix='/auth')
 
+app.register_blueprint(general_blueprint(mysql), url_prefix='/general')
 
 
-#Sample to check database connection
-@app.route('/check_db_connection', methods=['GET'])
-def check_db_connection():
-    try:
-        cur = mysql.connection.cursor()
-        cur.execute('SELECT 1')  # Executes a simple SELECT query
-        cur.close()
-        return jsonify({"message": "Successfully connected to the database."}), 200
-    except Exception as e:
-        return jsonify({"error": "Failed to connect to the database.", "details": str(e)}), 500
+
+
+
+# Define a function to get the user_id from JWT token before each request
+
+@app.before_request
+def before_request_callback():
+    #These are views we skip because we don't need jwtfor these
+    excluded_endpoints = ['auth', 'general']
+    if request.endpoint and request.endpoint in app.view_functions:
+        view_module = app.view_functions[request.endpoint].__module__
+        if view_module not in excluded_endpoints and 'protected' in view_module:
+            user_id = get_jwt_identity()
+            if user_id:
+                setattr(request, 'current_user_id', user_id)
+
 
 
 @app.route('/protected', methods=['GET'])
@@ -43,7 +53,7 @@ def check_db_connection():
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
-    return jsonify(current_user_id=current_user), 200
+    return jsonify(user_id=current_user), 200
 
 
 
