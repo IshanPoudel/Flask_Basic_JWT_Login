@@ -56,3 +56,12 @@ CREATE TABLE Reviews (
     FOREIGN KEY (UserID) REFERENCES Users(User_ID) ON DELETE CASCADE,
     FOREIGN KEY (Model_ID) REFERENCES Models(Model_ID) ON DELETE CASCADE
 );
+
+CREATE TABLE Likes (
+    Like_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Model_ID INT NOT NULL,
+    User_ID INT NOT NULL,
+    FOREIGN KEY (Model_ID) REFERENCES Models(Model_ID) ON DELETE CASCADE,
+    FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE,
+    UNIQUE (Model_ID, User_ID)  -- Ensure each user can like a model only once
+);

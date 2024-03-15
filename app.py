@@ -6,6 +6,7 @@ from flask_mysqldb import MySQL
 from auth import auth_blueprint
 from general_routes import general_blueprint
 from model import model_blueprint
+from subscription import subscription_blueprint
 
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -33,7 +34,9 @@ app.register_blueprint(general_blueprint(mysql), url_prefix='/general')
 
 app.register_blueprint(model_blueprint(mysql), url_prefix='/model')
 
+app.register_blueprint(subscription_blueprint(mysql), url_prefix='/sub')
 
+#One for subscribe , unsubscribe and liking
 
 
 
