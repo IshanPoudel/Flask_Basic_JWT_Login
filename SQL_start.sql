@@ -17,6 +17,9 @@ CREATE TABLE Tags (
     Name VARCHAR(255) UNIQUE NOT NULL
 );
 
+INSERT INTO Tags (Name) VALUES ('Finance'), ('Technology'), ('Services');
+
+
 CREATE TABLE Models (
     Model_ID INT AUTO_INCREMENT PRIMARY KEY,
     UserID INT NOT NULL,
@@ -24,7 +27,7 @@ CREATE TABLE Models (
     Name VARCHAR(255) NOT NULL,
     Like_Count INT DEFAULT 0,
     Subscribe_Count INT DEFAULT 0,
-    Model_File BLOB,
+    Model_File_Path VARCHAR(255),  -- Store the file path instead of the blob
     FOREIGN KEY (UserID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
 
