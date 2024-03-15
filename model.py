@@ -154,5 +154,46 @@ def model_blueprint(mysql):
             cur.close()
 
     # Other routes as needed...
+
+
+    
+    @model_blueprint.route('/get_all_models', methods=['GET'])
+    @jwt_required()  # Requires authentication
+    def get_all_models():
+        current_user_id = get_jwt_identity()
+        if not current_user_id:
+            return jsonify({"error": "User ID not found in token"}), 401
+        
+        cur = mysql.connection.cursor()
+        try:
+            # Fetch all models
+            cur.execute("SELECT * FROM Models")
+            models = cur.fetchall()
+            return jsonify({"models": models}), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch all models", "details": str(e)}), 500
+        finally:
+            cur.close()
+
+    # Route for fetching a model by model ID
+    @model_blueprint.route('/get_model_by_id/<int:model_id>', methods=['GET'])
+    @jwt_required()  # Requires authentication
+    def get_model_by_id(model_id):
+        current_user_id = get_jwt_identity()
+        if not current_user_id:
+            return jsonify({"error": "User ID not found in token"}), 401
+        
+        cur = mysql.connection.cursor()
+        try:
+            # Fetch the model by ID
+            cur.execute("SELECT * FROM Models WHERE Model_ID = %s", (model_id,))
+            model = cur.fetchone()
+            if not model:
+                return jsonify({"error": "Model not found"}), 404
+            return jsonify({"model": model}), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch model by ID", "details": str(e)}), 500
+        finally:
+            cur.close()
     
     return model_blueprint

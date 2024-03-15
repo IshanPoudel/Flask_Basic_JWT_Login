@@ -27,11 +27,11 @@ def login(username, password):
 
 def get_models_by_tags(token, tag_ids):
     url = f'{BASE_URL}/model/model_by_tags'
-    headers = {'Authorization': f'Bearer {token}'}
+    # headers = {'Authorization': f'Bearer {token}'}
     data = {'tags': tag_ids}  # Assuming tag IDs are provided as a list
 
     # Send the GET request
-    response = requests.get(url, headers=headers, json=data)
+    response = requests.get(url, json=data)
 
     # Print the response details for debugging
     print("Get Models by Tags (Status Code):", response.status_code)
