@@ -8,7 +8,8 @@ CREATE TABLE Users (
     User_ID INT AUTO_INCREMENT PRIMARY KEY,
     User VARCHAR(255) NOT NULL,
     Email VARCHAR(255) NOT NULL UNIQUE,
-    Hashed_Password VARCHAR(255) NOT NULL
+    Hashed_Password VARCHAR(255) NOT NULL,
+    Profile_Picture_Path VARCHAR(255) DEFAULT NULL
 );
 
 CREATE TABLE Tags (

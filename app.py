@@ -2,7 +2,9 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_mysqldb import MySQL
 from auth import auth_blueprint
-from flask_jwt_extended import jwt_required
+
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
 
 app = Flask(__name__)
 
@@ -41,7 +43,7 @@ def check_db_connection():
 def protected():
     # Access the identity of the current user with get_jwt_identity
     current_user = get_jwt_identity()
-    return jsonify(logged_in_as=current_user), 200
+    return jsonify(current_user_id=current_user), 200
 
 
 
