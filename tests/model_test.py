@@ -51,6 +51,22 @@ def add_model(token, model_name, description, tags, model_file_path):
     print("Response Content:", response.content)  # or response.text for decoded content
     return response
 
+
+
+#Function to delete a model
+# Function to delete a model
+def delete_model(token, model_id):
+    url = f'{BASE_URL}/model/delete/{model_id}'
+    headers = {'Authorization': f'Bearer {token}'}
+
+    # Send the DELETE request
+    response = requests.delete(url, headers=headers)
+    
+    # Print the response details
+    print("Delete Model (Status Code):", response.status_code)
+    print("Delete Model (Response Content):", response.content)
+    return response
+
 if __name__ == '__main__':
     # Test user registration and login
     email = "arsenal@gmail.com"
@@ -73,3 +89,10 @@ if __name__ == '__main__':
 
     add_model_response = add_model(jwt_token, model_name, description, tags, model_file_path)
     print('Add Model (Success):', add_model_response.json())
+
+
+    #Test deleting a model
+    model_id = add_model_response.json().get('model_id')
+    delete_model_response = delete_model(jwt_token ,model_id)
+    print('Delete Model (Response):', delete_model_response.json())
+
