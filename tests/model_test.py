@@ -67,6 +67,21 @@ def delete_model(token, model_id):
     print("Delete Model (Response Content):", response.content)
     return response
 
+
+def get_models_by_user(token):
+    url = f'{BASE_URL}/model/model_by_user'
+    headers = {'Authorization': f'Bearer {token}'}
+
+    # Send the GET request
+    response = requests.get(url, headers=headers)
+
+    # Print the response details for debugging
+    print("Get Models by User (Status Code):", response.status_code)
+    print("Get Models by User (Response Content):", response.content)  # or response.text for decoded content
+    return response
+
+
+
 if __name__ == '__main__':
     # Test user registration and login
     email = "arsenal@gmail.com"
@@ -87,12 +102,20 @@ if __name__ == '__main__':
     tags = [1, 2]
     model_file_path = "/home/ec2-user/dummy_stock_models_for_upload/abc.joblib"
 
-    add_model_response = add_model(jwt_token, model_name, description, tags, model_file_path)
-    print('Add Model (Success):', add_model_response.json())
+    # add_model_response = add_model(jwt_token, model_name, description, tags, model_file_path)
+    # print('Add Model (Success):', add_model_response.json())
+    # add_model_response=add_model(jwt_token , "Test_model_2" , description , [1,3] , "/home/ec2-user/dummy_stock_models_for_upload/cde.joblib" )
+    # print('Add Model (Success):', add_model_response.json())
 
 
-    #Test deleting a model
-    model_id = add_model_response.json().get('model_id')
-    delete_model_response = delete_model(jwt_token ,model_id)
-    print('Delete Model (Response):', delete_model_response.json())
+    # #Test deleting a model
+    # model_id = add_model_response.json().get('model_id')
+    # delete_model_response = delete_model(jwt_token ,model_id)
+    # print('Delete Model (Response):', delete_model_response.json())
+
+    #Test getting all models
+
+    get_models_response = get_models_by_user(jwt_token)
+    print('Get Models by User (Response):', get_models_response.json())
+    
 

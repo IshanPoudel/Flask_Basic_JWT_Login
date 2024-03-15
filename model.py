@@ -22,7 +22,7 @@ def model_blueprint(mysql):
         #Extract model details from the JSON data
         name = request.form.get('name')
         description = request.form.get('description')
-        tags = request.form.get('tags')  # Assuming tags is a list of tag IDs
+        tags = request.form.getlist('tags')  # Assuming tags is a list of tag IDs
 
 
 
@@ -110,13 +110,13 @@ def model_blueprint(mysql):
 
 
     # Route for fetching models by user ID
-    @model_blueprint.route('/models/user', methods=['GET'])
+    @model_blueprint.route('/model_by_user', methods=['GET'])
     @jwt_required()  # Requires authentication
     def get_models_by_user_id():
         current_user_id = get_jwt_identity()
         if not current_user_id:
             return jsonify({"error": "User ID not found in token"}), 401
-
+        print("I am here ")
         cur = mysql.connection.cursor()
         try:
             # Fetch models belonging to the current user
@@ -131,7 +131,7 @@ def model_blueprint(mysql):
     # Route for fetching models by tags
     @model_blueprint.route('/models/tags', methods=['GET'])
     def get_models_by_tags():
-        tags = request.json.get('tags')  # Assuming tags are provided as JSON
+        tags = request.json.getlist('tags')  # Assuming tags are provided as JSON
         if not tags:
             return jsonify({"error": "At least one tag must be provided"}), 400
 
