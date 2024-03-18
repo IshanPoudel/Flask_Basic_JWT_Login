@@ -6,14 +6,29 @@ from datetime import datetime, timedelta
 import pytz
 import matplotlib.pyplot as plt
 import seaborn as sns
+import mysql.connector
+from mysql.connector import Error
 
 #Runs prediciton on all models
 
 # Define the Central Time Zone (CDT)
 central_timezone = pytz.timezone('America/Chicago')
 
+
+
 # Get the current date in CDT
 current_cdt_date = datetime.now(central_timezone).strftime('%Y-%m-%d')
+
+
+#Get global mysql access
+# MySQL configurations
+mysql_config = {
+    'host': 'localhost',
+    'user': 'ishan',
+    'password': 'ishan',
+    'database': 'trademind_dev'
+}
+
 
 def download_data_for_live_test(tickers, start_date='2023-01-01', end_date=current_cdt_date):
     live_data = pd.DataFrame()
@@ -50,17 +65,41 @@ def load_and_test_models(tickers, models_path='/home/ec2-user/stock_models/'):
     features = ['Open', 'High', 'Low', 'Volume']
     target = 'Close'
 
-    model_names = [
-        '1_AdaBoost',
-        '1_DecisionTree',
-        '1_GradientBoosting',
-        '1_KNeighbors',
-        '1_LGBMRegressor',
-        '1_LinearRegression',
-        '1_RandomForest',
-        '1_SVR'
-    ]    
-    models = {model_name: joblib.load(f'{models_path}{model_name}.joblib') for model_name in model_names}
+    # model_names = [
+    #     '1_AdaBoost',
+    #     '1_DecisionTree',
+    #     '1_GradientBoosting',
+    #     '1_KNeighbors',
+    #     '1_LGBMRegressor',
+    #     '1_LinearRegression',
+    #     '1_RandomForest',
+    #     '1_SVR'
+    # ]    
+    # models = {model_name: joblib.load(f'{models_path}{model_name}.joblib') for model_name in model_names}
+    try:
+        connection = mysql.connector.connect(**mysql_config)
+        cursor = connection.cursor(dictionary=True)
+
+        models= []
+
+
+        cursor.execute("SELECT Model_ID, Model_File_Path FROM Models")
+        for row in cursor.fetchall():
+            model_id = row['Model_ID']
+            model_file_path = row['Model_File_Path']
+            #model = joblib.load(model_file_path)
+            #models[model_name] = model
+            models.append({"model_id": model_id , "model_file_path": model_file_path})
+    except mysql.connector.Error as error:
+        print(f"Error while connecting to MySQL: {error}")
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
+    
+    print(models)
+
+
 
     timeframes = {
         'Previous 1 Day': 1,
@@ -79,11 +118,17 @@ def load_and_test_models(tickers, models_path='/home/ec2-user/stock_models/'):
 
             print(f"\nEvaluating {timeframe_name}:")
 
-            for model_name, model in models.items():
-                mse, actual_dates, actual_prices, predicted_prices = calculate_mse_for_timeframe(model, features, target, ticker_data, start_date, end_date)
-                print(f"{model_name}: MSE - {mse:.4f}")
+            #models = {model_name: joblib.load(f'{models_path}{model_name}.joblib') for model_name in model_names}
 
-                #visualize_predictions(actual_dates, actual_prices, predicted_prices, model_name, timeframe_name)
+
+            for model_json in models:
+                model_id = model_json['model_id']
+                model_file_path = model_json['model_file_path']
+                actual_model = joblib.load(model_file_path)
+                mse, actual_dates, actual_prices, predicted_prices = calculate_mse_for_timeframe(actual_model, features, target, ticker_data, start_date, end_date)
+                print(f"{model_id}: MSE - {mse:.4f}")
+
+                visualize_predictions(actual_dates, actual_prices, predicted_prices, model_id, timeframe_name)
 
 if __name__ == "__main__":
     tickers = ['AAPL', 'MSFT', 'AMZN', 'GOOGL']
