@@ -39,7 +39,7 @@ def model_blueprint(mysql):
             cur = mysql.connection.cursor()
 
 
-            model_file_path_to_save = f"{model_file_path}{current_user_id}_{name}.joblib"
+            model_file_path_to_save = f"{model_file_path}{current_user_id}_{name}"
 
 
             # Insert the model details into the database
