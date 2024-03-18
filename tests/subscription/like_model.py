@@ -33,7 +33,6 @@ def like_model(token, model_id):
     return response
 
 if __name__ == '__main__':
-    # Now create a second user that likes and subscribes
     email = "cl@gmail.com"
     password = "championsleague"
     username = "arsenalwin"

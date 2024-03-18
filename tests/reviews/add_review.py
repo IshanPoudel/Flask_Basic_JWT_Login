@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     # Test adding a review to a model
     model_id = 1
-    comment = "This is a test review for the model.Hello  Excellent model , there seems to be a bit better for this"
+    comment = "This is a test review for the model. Secodn review on trhe modelHello  Excellent model , there seems to be a bit better for this"
 
     add_review_response = add_review(jwt_token, model_id, comment)
     print('Add Review (Response):', add_review_response.json())

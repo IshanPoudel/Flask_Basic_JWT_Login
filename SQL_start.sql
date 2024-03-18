@@ -52,7 +52,7 @@ CREATE TABLE Reviews (
     UserID INT NOT NULL,
     Model_ID INT NOT NULL,
     Comment TEXT,
-    Upvote INT DEFAULT 0,
+    Upvote INT DEFAULT 1,
     FOREIGN KEY (UserID) REFERENCES Users(User_ID) ON DELETE CASCADE,
     FOREIGN KEY (Model_ID) REFERENCES Models(Model_ID) ON DELETE CASCADE
 );

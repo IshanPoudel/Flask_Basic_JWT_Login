@@ -49,25 +49,36 @@ def toggle_upvote(token , review_id):
 
 if __name__ == '__main__':
     # Register and login a user
-    email = "cl@gmail.com"
-    password = "championsleague"
-    username = "arsenalwin"
+    email = "cdl@gmail.com"
+    password = "chdampionsleague"
+    username = "arsdenalwin"
 
     registration_response_success = register(email, password, username)
     login_response_success = login(username, password)
     jwt_token = login_response_success.json().get('access_token')
 
-    # Test adding a review to a model
-    model_id = 2
-    comment = "This is a test review for upvote better for this"
+    
 
-    add_review_response = add_review(jwt_token, model_id, comment)
-    print('Add Review (Response):', add_review_response.json())
-
-    #Upvoting this
 
     review_id = 1
 
     toggle_upvote_response = toggle_upvote(jwt_token , review_id)
     print('Upvote(Response):' , toggle_upvote_response.json())
+
+
+    # Register and login a user
+    email = "clbdd@gmail.com"
+    password = "chadmpionsleagueclb"
+    username = "arsdenalwinclsdh"
+
+    registration_response_success = register(email, password, username)
+    login_response_success = login(username, password)
+    jwt_token = login_response_success.json().get('access_token')
+
+    review_id = 1
+
+    toggle_upvote_response = toggle_upvote(jwt_token , review_id)
+    print('Upvote(Response):' , toggle_upvote_response.json())
+
+
 
