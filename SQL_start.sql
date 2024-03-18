@@ -73,3 +73,22 @@ CREATE TABLE Likes (
     FOREIGN KEY (User_ID) REFERENCES Users(User_ID) ON DELETE CASCADE,
     UNIQUE (Model_ID, User_ID)  -- Ensure each user can like a model only once
 );
+
+CREATE TABLE Stocks (
+    Stock_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Ticker VARCHAR(10) NOT NULL UNIQUE
+);
+
+
+
+CREATE TABLE MSE_Results (
+    Result_ID INT AUTO_INCREMENT PRIMARY KEY,
+    Stock_ID INT,
+    Timeframe_Name VARCHAR(50),
+    Model_ID INT,
+    MSE_Value FLOAT,
+    Evaluation_Date DATE,
+    Raw_Data JSON,
+    FOREIGN KEY (Stock_ID) REFERENCES Stocks(Stock_ID) ON DELETE CASCADE,
+    FOREIGN KEY (Model_ID) REFERENCES Models(Model_ID) ON DELETE CASCADE
+);
