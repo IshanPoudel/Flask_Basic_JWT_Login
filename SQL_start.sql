@@ -92,3 +92,13 @@ CREATE TABLE MSE_Results (
     FOREIGN KEY (Stock_ID) REFERENCES Stocks(Stock_ID) ON DELETE CASCADE,
     FOREIGN KEY (Model_ID) REFERENCES Models(Model_ID) ON DELETE CASCADE
 );
+
+CREATE TABLE trademinds_nasdaqdata (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    date DATE UNIQUE,
+    open DECIMAL(10, 2),
+    high DECIMAL(10, 2),
+    low DECIMAL(10, 2),
+    close DECIMAL(10, 2),
+    volume BIGINT
+);
