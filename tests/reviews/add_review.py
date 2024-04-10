@@ -38,17 +38,17 @@ def add_review(token, model_id, comment):
 
 if __name__ == '__main__':
     # Register and login a user
-    email = "cl@gmail.com"
-    password = "championsleague"
-    username = "arsenalwin"
+    email = "joey@gmail.com"
+    password = "joey123"
+    username = "joeyhussain"
 
     registration_response_success = register(email, password, username)
     login_response_success = login(username, password)
     jwt_token = login_response_success.json().get('access_token')
 
     # Test adding a review to a model
-    model_id = 1
-    comment = "This is a test review for the model. Secodn review on trhe modelHello  Excellent model , there seems to be a bit better for this"
+    model_id = 10
+    comment = "This is a great model to use."
 
     add_review_response = add_review(jwt_token, model_id, comment)
     print('Add Review (Response):', add_review_response.json())

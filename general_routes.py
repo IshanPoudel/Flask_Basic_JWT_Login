@@ -46,6 +46,47 @@ def general_blueprint(mysql):
 
     # Define other routes for general requests here...
 
+    @general_blueprint.route('/modeltags', methods=['GET'])
+    @general_blueprint.route('/modeltags/<int:model_id>', methods=['GET'])
+    def get_model_tags(model_id=None):
+     try:
+      cur = mysql.connection.cursor()
+      # Check if model_id is provided
+      if model_id is not None:
+            # Get tags associated with the specific model
+            cur.execute("""
+                  SELECT 
+                    mt.Model_ID,
+                      t.TagID,
+                    t.Name
+                FROM 
+                    Tags t
+                JOIN 
+                    Model_Tags mt ON t.TagID = mt.TagID
+                WHERE 
+                    mt.Model_ID = %s;
+              """, (model_id,))
+      else:
+            # Get all tags associated with all models
+              cur.execute("""
+                  SELECT 
+                    mt.Model_ID,
+                    t.TagID,
+                    t.Name
+                FROM 
+                    Tags t
+                JOIN 
+                    Model_Tags mt ON t.TagID = mt.TagID;
+               """)
+
+      tags = cur.fetchall()
+
+      cur.close()
+
+      return jsonify(tags), 200
+     except Exception as e:
+          return jsonify({"error": "Failed to fetch model tags", "details": str(e)}), 500
+
     # Define a route to get all model information with user data
     @general_blueprint.route('/models', methods=['GET'])
     def get_all_models():
@@ -528,5 +569,8 @@ def general_blueprint(mysql):
 
         except Exception as e:
             return jsonify({"error": "Failed to fetch result info for the model and stock ticker", "details": str(e)}), 500
+
+
+        
 
     return general_blueprint

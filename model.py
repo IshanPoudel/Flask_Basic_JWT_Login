@@ -182,11 +182,14 @@ def model_blueprint(mysql):
         current_user_id = get_jwt_identity()
         if not current_user_id:
             return jsonify({"error": "User ID not found in token"}), 401
+
+        
+
         
         cur = mysql.connection.cursor()
         try:
             # Fetch the model by ID
-            cur.execute("SELECT * FROM Models WHERE Model_ID = %s", (model_id,))
+            cur.execute("SELECT * FROM Models WHERE Model_ID = %s and  UserID = %s", (model_id,current_user_id ,))
             model = cur.fetchone()
             if not model:
                 return jsonify({"error": "Model not found"}), 404

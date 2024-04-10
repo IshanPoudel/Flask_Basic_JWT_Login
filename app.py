@@ -1,7 +1,7 @@
 from flask import Flask, jsonify , request
 from flask_jwt_extended import JWTManager
 from flask_mysqldb import MySQL
-
+from flask_cors import CORS
 #All our route classes
 from auth import auth_blueprint
 from general_routes import general_blueprint
@@ -13,6 +13,9 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 
 app = Flask(__name__)
+
+#disable cors
+CORS(app)
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = 'trademinds'  # Change this!
