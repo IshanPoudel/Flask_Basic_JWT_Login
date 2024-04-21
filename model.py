@@ -14,9 +14,12 @@ def model_blueprint(mysql):
     @jwt_required()  # Requires authentication
     def add_model():
         print("Adding a model")
+        print(request.form)
+        print(request.files)
         current_user_id = get_jwt_identity()
         if not current_user_id:
             return jsonify({"error": "User ID not found in token"}), 401
+
 
 
         #Extract model details from the JSON data
@@ -30,6 +33,7 @@ def model_blueprint(mysql):
         model_file = request.files.get('model_file')
         if not model_file :
             return jsonify({"error": "Model name and file are required"}), 400
+
 
 
         try:

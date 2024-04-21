@@ -4,7 +4,7 @@ from flask import Blueprint, jsonify, current_app
 def general_blueprint(mysql):
     general_blueprint = Blueprint('general', __name__)
 
-    # Define a route for checking database connection
+# Define a route for checking database connection
     @general_blueprint.route('/check_db_connection', methods=['GET'])
     def check_db_connection():
         try:
@@ -16,7 +16,7 @@ def general_blueprint(mysql):
             return jsonify({"error": "Failed to connect to the database.", "details": str(e)}), 500
     
 
-    #Get nasdaq data for viz
+# NASDAQ data Route
     @general_blueprint.route('/nasdaq_data', methods=['GET'])
     def get_nasdaq_data():
         try:
@@ -43,9 +43,9 @@ def general_blueprint(mysql):
 
         finally:
             cur.close()
+            
 
-    # Define other routes for general requests here...
-
+# GET MODEL TAGS BY MODEL ID
     @general_blueprint.route('/modeltags', methods=['GET'])
     @general_blueprint.route('/modeltags/<int:model_id>', methods=['GET'])
     def get_model_tags(model_id=None):
@@ -87,7 +87,8 @@ def general_blueprint(mysql):
      except Exception as e:
           return jsonify({"error": "Failed to fetch model tags", "details": str(e)}), 500
 
-    # Define a route to get all model information with user data
+
+# ALL MODELS ROUTE
     @general_blueprint.route('/models', methods=['GET'])
     def get_all_models():
         try:
@@ -115,7 +116,8 @@ def general_blueprint(mysql):
         except Exception as e:
             return jsonify({"error": "Failed to fetch models", "details": str(e)}), 500
 
-    # Define a route to get all reviews with reviewer information
+
+# ALL REVIEWS ROUTE 
     @general_blueprint.route('/reviews', methods=['GET'])
     def get_all_reviews():
         try:
@@ -140,7 +142,8 @@ def general_blueprint(mysql):
         except Exception as e:
             return jsonify({"error": "Failed to fetch reviews", "details": str(e)}), 500
 
-    # Define a route to get all review upvotes
+
+# ALL REVIEW UPVOTE ROUTE
     @general_blueprint.route('/review_upvotes', methods=['GET'])
     def get_all_review_upvotes():
         try:
@@ -162,8 +165,83 @@ def general_blueprint(mysql):
             return jsonify({"error": "Failed to fetch review upvotes", "details": str(e)}), 500
     
         # Define a route to get model information by ID with user data
-   
-   #Get specific model from id
+
+
+# ALL USERS WHO LIKED MODELS
+    @general_blueprint.route('/model_likes', methods=['GET'])
+    def get_all_models_likes():
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    m.Model_ID, 
+                    l.User_ID
+                FROM 
+                    Models m
+                LEFT JOIN 
+                    Likes l ON m.Model_ID = l.Model_ID
+                ORDER BY 
+                    m.Model_ID;
+            """)
+            results = cur.fetchall()
+            cur.close()
+
+            # Format the result into a structured dictionary
+            models_likes = {}
+            for row in results:
+                model_id = row['Model_ID']
+                if model_id not in models_likes:
+                    models_likes[model_id] = {
+                        'Model_ID': model_id,
+                        'Liked_By': []
+                    }
+                if row['User_ID']:  # Only add user ID if not None (i.e., there is a like)
+                    models_likes[model_id]['Liked_By'].append(row['User_ID'])
+
+            return jsonify(list(models_likes.values())), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch model likes", "details": str(e)}), 500
+
+
+
+# LIKES OF MODEL BY USERS
+    @general_blueprint.route('/model_likes/<int:user_id>', methods=['GET'])
+    
+    def get_models_liked_by_user(user_id):
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    m.Model_ID,
+                    m.Name AS Model_Name
+                FROM 
+                    Likes l
+                JOIN 
+                    Models m ON m.Model_ID = l.Model_ID
+                WHERE 
+                    l.User_ID = %s
+                ORDER BY 
+                    m.Model_ID;
+            """, (user_id,))
+            models_liked = cur.fetchall()
+            cur.close()
+
+            # Format the result into a structured list
+            liked_models = [
+                {'Model_ID': model['Model_ID'], 'Model_Name': model['Model_Name']}
+                for model in models_liked
+            ]
+
+            if liked_models:
+                return jsonify(liked_models), 200
+            else:
+                return jsonify({"message": "No models found or invalid user ID"}), 200
+
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch liked models for user", "details": str(e)}), 500
+
+
+# MODEL BY ID ROUTE
     @general_blueprint.route('/models/<int:model_id>', methods=['GET'])
     def get_model_by_id(model_id):
         try:
@@ -209,8 +287,42 @@ def general_blueprint(mysql):
             return jsonify(model), 200
         except Exception as e:
             return jsonify({"error": "Failed to fetch model and review IDs", "details": str(e)}), 500
+
     
-    #Get specific revew/comment detial
+# MODEL BY USER ROUTE
+    @general_blueprint.route('/models/user/<int:user_id>', methods=['GET'])
+    def get_models_by_user_id(user_id):
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    m.Model_ID, 
+                    m.Description, 
+                    m.Like_Count, 
+                    m.Subscribe_Count, 
+                    m.Name AS Model_Name, 
+                    m.Model_File_Path,
+                    u.User_ID AS Creator_ID,
+                    u.User AS Creator_Name,
+                    u.Email AS Creator_Email,
+                    u.Profile_Picture_Path AS Creator_Profile_Picture
+                FROM 
+                    Models m
+                JOIN 
+                    Users u ON m.UserID = u.User_ID
+                WHERE 
+                    u.User_ID = %s;
+            """, (user_id,))
+            models = cur.fetchall()
+            cur.close()
+            if not models:
+                return jsonify({"error": "No models found for the specified user"}), 404
+            return jsonify(models), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch models", "details": str(e)}), 500
+
+
+# SPECIFIC REVIEW ROUTE
     @general_blueprint.route('/reviews/<int:review_id>', methods=['GET'])
     def get_review_by_id(review_id):
         try:
@@ -256,8 +368,9 @@ def general_blueprint(mysql):
             return jsonify(review), 200
         except Exception as e:
             return jsonify({"error": "Failed to fetch review and upvotes", "details": str(e)}), 500
-    
-    #Get all subscribers to a model
+
+
+# MODEL SUBSCRIBERS
     @general_blueprint.route('/models/<int:model_id>/subscribers', methods=['GET'])
     def get_model_subscribers(model_id):
         try:
@@ -302,11 +415,9 @@ def general_blueprint(mysql):
 
     
         # Define a route to get the latest MSE results
-    
 
 
-
-    #Get latest mse_result
+# LATEST MSE DATA ROUTE
     @general_blueprint.route('/models/latest_mse_results', methods=['GET'])
     def get_latest_mse_results():
         try:
@@ -339,7 +450,8 @@ def general_blueprint(mysql):
                 AND 
                     r.Model_ID = latest.Model_ID
                 JOIN 
-                    Stocks s ON r.Stock_ID = s.Stock_ID;
+                    Stocks s ON r.Stock_ID = s.Stock_ID 
+                 WHERE r.Model_ID= 1;
             """)
             latest_mse_results = cur.fetchall()
             cur.close()
@@ -348,8 +460,7 @@ def general_blueprint(mysql):
             return jsonify({"error": "Failed to fetch latest MSE results", "details": str(e)}), 500
     
 
-
-    #Get rankings of model based on individual stock , These two work
+# MSE FOR SPECIFIC STOCK ROUTE
     #Sorts by timeframe and gives models based on their MSE for a specific stock
     @general_blueprint.route('/stocks/<string:ticker>/mse_rankings', methods=['GET'])
     def get_mse_rankings_by_stock_ticker(ticker):
@@ -397,7 +508,7 @@ def general_blueprint(mysql):
             return jsonify({"error": "Failed to fetch MSE rankings for the stock ticker", "details": str(e)}), 500
     
 
-    #Gets visualization data for each review
+# RESULTS BY RESULT ID ROUTE
     @general_blueprint.route('/results/<int:result_id>', methods=['GET'])
     def get_result_by_id(result_id):
         try:
@@ -432,8 +543,9 @@ def general_blueprint(mysql):
                 return jsonify({"error": "Result not found"}), 404
         except Exception as e:
             return jsonify({"error": "Failed to fetch result by Result_ID", "details": str(e)}), 500
-            
-    #Get model rankings , so models ranked on average MSE across four timeframes , need model  id , review_id and mSE
+
+
+# AVERAGE MSE BY MODEL AND TIMEFRAME ROUTE
     @general_blueprint.route('/models/average_mse_by_model_and_timeframe', methods=['GET'])
     def get_average_mse_by_model_and_timeframe():
         try:
@@ -514,7 +626,7 @@ def general_blueprint(mysql):
             return jsonify({"error": "Failed to fetch review IDs for the model and stock ticker", "details": str(e)}), 500
     
 
-    #Gets all results_ids for the models and stock
+# GET MSE RESULTS FOR SPECIFIC STOCK AND MODEL
     #SO for mod1l 1 for apple , gets all four results and mse
     @general_blueprint.route('/models/<int:model_id>/stock/<string:stock_ticker>/result_info', methods=['GET'])
     def get_result_info_for_model_and_ticker(model_id, stock_ticker):
@@ -571,6 +683,65 @@ def general_blueprint(mysql):
             return jsonify({"error": "Failed to fetch result info for the model and stock ticker", "details": str(e)}), 500
 
 
-        
+# GET MSE RESULTS FOR ALL STOCKS GROUPED BY MODEL
+    @general_blueprint.route('/models/latest_mse_results_grouped/<int:model_id>', methods=['GET'])
+    def get_latest_mse_results_grouped(model_id):
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    r.Result_ID,
+                    r.Stock_ID,
+                    s.Ticker,
+                    r.Model_ID,
+                    r.Timeframe_Name,
+                    r.MSE_Value,
+                    r.Evaluation_Date,
+                    r.Raw_Data
+                FROM 
+                    MSE_Results r
+                JOIN 
+                    (SELECT 
+                        MAX(Evaluation_Date) AS Latest_Evaluation_Date,
+                        Stock_ID,
+                        Model_ID
+                    FROM 
+                        MSE_Results
+                    GROUP BY 
+                        Stock_ID, Model_ID) latest
+                ON 
+                    r.Evaluation_Date = latest.Latest_Evaluation_Date
+                AND 
+                    r.Stock_ID = latest.Stock_ID
+                AND 
+                    r.Model_ID = latest.Model_ID
+                JOIN               
+                    Stocks s ON r.Stock_ID = s.Stock_ID
+                WHERE 
+                    r.Model_ID = %s;
+                """, (model_id,))
+            results = cur.fetchall()
+            cur.close()
+
+            # Reformatting the results by ticker
+            ticker_grouped_results = {}
+            for result in results:
+                ticker = result['Ticker']
+                if ticker not in ticker_grouped_results:
+                    ticker_grouped_results[ticker] = []
+                ticker_grouped_results[ticker].append({
+                    'Result_ID': result['Result_ID'],
+                    'Stock_ID': result['Stock_ID'],
+                    'Model_ID': result['Model_ID'],
+                    'Timeframe_Name': result['Timeframe_Name'],
+                    'MSE_Value': result['MSE_Value'],
+                    'Evaluation_Date': result['Evaluation_Date'],
+                    'Raw_Data': result['Raw_Data']
+                })
+
+            return jsonify(ticker_grouped_results), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch latest MSE results", "details": str(e)}), 500
+     
 
     return general_blueprint

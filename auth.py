@@ -53,6 +53,11 @@ def auth_blueprint(mysql):
         cur.execute("SELECT User_ID, Hashed_Password FROM Users WHERE User = %s", [username])
         user = cur.fetchone()
 
+        if not user:
+            return jsonify({"error": "Invalid login credentials"}), 401
+
+
+
         
 
         if not user or not bcrypt.check_password_hash(user['Hashed_Password'], password):
@@ -63,7 +68,7 @@ def auth_blueprint(mysql):
             return jsonify({"error": "Invalid login credentials"}), 401
 
         # Identity can be any data that is json serializable
-        access_token = create_access_token(identity=user['User_ID'])
+        access_token = create_access_token(identity=user['User_ID'], expires_delta=datetime.timedelta(days=1))
         print("Succesfully logged in " , access_token)
         return jsonify(access_token=access_token), 200
 

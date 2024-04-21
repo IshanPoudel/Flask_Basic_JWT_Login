@@ -51,8 +51,8 @@ def delete_model(token, model_id):
 if __name__ == '__main__':
     # Test user registration and login
     email = "arsenal@gmail.com"
-    password = "arsenal"
-    username = "arsenalfirst"
+    password = "maulik"
+    username = "maulik456"
 
   
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
     #Test deleting a model
     # model_id = add_model_response.json().get('model_id')
     #Assuming you have a model with model_id = 1
-    delete_model_response = delete_model(jwt_token ,1)
+    delete_model_response = delete_model(jwt_token ,11)
     print('Delete Model (Response):', delete_model_response.json())
 
     
