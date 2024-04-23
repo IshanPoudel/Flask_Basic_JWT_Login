@@ -8,6 +8,8 @@ from general_routes import general_blueprint
 from model import model_blueprint
 from subscription import subscription_blueprint
 from review import review_blueprint
+from datetime import datetime
+from datetime import timedelta
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -19,6 +21,7 @@ CORS(app)
 
 # Setup the Flask-JWT-Extended extension
 app.config['JWT_SECRET_KEY'] = 'trademinds'  # Change this!
+app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=30)
 jwt = JWTManager(app)
 
 # MySQL configurations

@@ -28,6 +28,8 @@ CREATE TABLE Models (
     Like_Count INT DEFAULT 0,
     Subscribe_Count INT DEFAULT 0,
     Model_File_Path VARCHAR(255),  -- Store the file path instead of the blob
+    imgURL VARCHAR(255) DEFAULT NULL
+
     FOREIGN KEY (UserID) REFERENCES Users(User_ID) ON DELETE CASCADE
 );
 

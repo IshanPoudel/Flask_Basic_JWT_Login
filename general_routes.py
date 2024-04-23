@@ -1,4 +1,6 @@
-from flask import Blueprint, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app
+from flask_jwt_extended import jwt_required, get_jwt_identity
+import os
 
 # Define a blueprint for general requests
 def general_blueprint(mysql):
@@ -116,6 +118,138 @@ def general_blueprint(mysql):
         except Exception as e:
             return jsonify({"error": "Failed to fetch models", "details": str(e)}), 500
 
+#Get Reviews of models
+    @general_blueprint.route('/models/<int:model_id>/reviews', methods=['GET'])
+    def get_reviews_by_model_id(model_id):
+        try:
+            cur = mysql.connection.cursor()
+            # SQL query to fetch reviews and their upvoter IDs for a specific model
+            cur.execute("""
+                SELECT 
+                    r.Review_ID, 
+                    r.UserID AS Reviewer_ID, 
+                    u.User AS Reviewer_Name,
+                    u.Profile_Picture_Path AS Reviewer_Profile_Pic,
+                    r.Comment,
+                    r.Upvote, 
+                    GROUP_CONCAT(ru.User_ID SEPARATOR ', ') AS Upvoter_IDs
+                FROM 
+                    Reviews r
+                JOIN 
+                    Users u ON r.UserID = u.User_ID
+                LEFT JOIN 
+                    Review_Upvotes ru ON r.Review_ID = ru.Review_ID
+                WHERE 
+                    r.Model_ID = %s
+                GROUP BY 
+                    r.Review_ID;
+            """, (model_id,))
+            reviews = cur.fetchall()
+
+
+            if not reviews:
+                return jsonify({"error": "No reviews found for this model"}), 404
+
+            cur.close()
+            return jsonify(reviews), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch reviews", "details": str(e)}), 500
+
+
+#GET USER DETAILS
+    @general_blueprint.route('/userdetails', methods=['GET'])
+    @jwt_required()  # Requires a valid JWT token to access this route
+    def user_details():
+        current_user_id = get_jwt_identity()  # Extract user ID from the JWT token
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    User_ID,
+                    User AS Name,
+                    Email,
+                    Profile_Picture_Path
+                FROM 
+                    Users
+                WHERE 
+                    User_ID = %s;
+            """, (current_user_id,))
+            user_info = cur.fetchone()  # Using fetchone() since we expect only one row
+            cur.close()
+            if not user_info:
+                return jsonify({"message": "User not found"}), 404
+            return jsonify(user_info), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch user details", "details": str(e)}), 500
+
+# Get User Liked Models
+    @general_blueprint.route('/userlikes', methods=['GET'])
+    @jwt_required()  # Require the JWT token for this route
+    def get_user_model_likes():
+        user_id = get_jwt_identity()  # Extracts the user ID from the JWT token
+        try:
+            cur = mysql.connection.cursor()
+            # Updated query to fetch full model details for liked models
+            cur.execute("""
+                SELECT 
+                    m.Model_ID, 
+                    m.Description, 
+                    m.Like_Count, 
+                    m.Subscribe_Count, 
+                    m.Name AS Model_Name, 
+                    m.Model_File_Path,
+                    u.User_ID AS Creator_ID,
+                    u.User AS Creator_Name,
+                    u.Email AS Creator_Email,
+                    u.Profile_Picture_Path AS Creator_Profile_Picture
+                FROM 
+                    Models m
+                JOIN 
+                    Users u ON m.UserID = u.User_ID
+                JOIN
+                    Likes l ON m.Model_ID = l.Model_ID
+                WHERE 
+                    l.User_ID = %s;
+            """, (user_id,))
+            models = cur.fetchall()
+            cur.close()
+            return jsonify(models), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch user liked models", "likes": str(e)}), 500
+
+# Get User Created Models
+    @general_blueprint.route('/usermodels', methods=['GET'])
+    @jwt_required()  # Require the JWT token for this route
+    def get_user_created_models():
+        user_id = get_jwt_identity()  # Extracts the user ID from the JWT token
+        try:
+            cur = mysql.connection.cursor()
+            cur.execute("""
+                SELECT 
+                    m.Model_ID, 
+                    m.Description, 
+                    m.Like_Count, 
+                    m.Subscribe_Count, 
+                    m.Name AS Model_Name, 
+                    m.Model_File_Path,
+                    u.User_ID AS Creator_ID,
+                    u.User AS Creator_Name,
+                    u.Email AS Creator_Email,
+                    u.Profile_Picture_Path AS Creator_Profile_Picture
+                FROM 
+                    Models m
+                JOIN 
+                    Users u ON m.UserID = u.User_ID
+                WHERE 
+                    u.User_ID = %s
+                ORDER BY 
+                    m.Model_ID;
+            """, (user_id,))
+            models = cur.fetchall()
+            cur.close()
+            return jsonify(models), 200
+        except Exception as e:
+            return jsonify({"error": "Failed to fetch user liked models", "likes": str(e)}), 500
 
 # ALL REVIEWS ROUTE 
     @general_blueprint.route('/reviews', methods=['GET'])
@@ -239,7 +373,6 @@ def general_blueprint(mysql):
 
         except Exception as e:
             return jsonify({"error": "Failed to fetch liked models for user", "details": str(e)}), 500
-
 
 # MODEL BY ID ROUTE
     @general_blueprint.route('/models/<int:model_id>', methods=['GET'])
